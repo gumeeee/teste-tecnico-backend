@@ -10,3 +10,5 @@ Content-Type: application/json
     "descricao": "Abacaxi excepcional jamais visto"
 }
 
+### /produto/:id (get): retorna um produto buscando pelo id do mesmo, juntamente com os seus dados de operação, dentro do campo "operacoes"
+GET http://localhost:3000/produto/1
