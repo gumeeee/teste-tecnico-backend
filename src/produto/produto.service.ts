@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
@@ -50,7 +51,16 @@ export class ProdutoService {
 
   async buscarPorId(id: number): Promise<Produto> {
     //desenvolver método para retornar o produto do id informado, com os respectivos dados de operações
-    throw new Error('Método não implementado.');
+    try {
+      const produto = await this.prisma.produto.findUnique({
+        where: { id },
+        include: { operacoes: true },
+      });
+      if (!produto) throw new NotFoundException('Produto não encontrado.');
+      return produto;
+    } catch (error) {
+      throw new InternalServerErrorException('Erro ao buscar o produto.');
+    }
   }
 
   async atualizar(
