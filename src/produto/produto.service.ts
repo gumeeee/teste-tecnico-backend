@@ -44,7 +44,7 @@ export class ProdutoService {
       return await this.prisma.produto.create({
         data: createProdutoDto,
       });
-    } catch (error) {
+    } catch (err) {
       throw new InternalServerErrorException('Erro ao criar o produto.');
     }
   }
@@ -58,7 +58,7 @@ export class ProdutoService {
       });
       if (!produto) throw new NotFoundException('Produto não encontrado.');
       return produto;
-    } catch (error) {
+    } catch (err) {
       throw new InternalServerErrorException('Erro ao buscar o produto.');
     }
   }
@@ -68,7 +68,44 @@ export class ProdutoService {
     updateProdutoDto: UpdateProdutoDto,
   ): Promise<Produto> {
     //desenvolver método para atualizar os dados do produto do id informado, retornando o produto atualizado
-    throw new Error('Método não implementado.');
+    const { nome, precoCompra, precoVenda, quantidade } = updateProdutoDto;
+
+    const produtoExistente = await this.prisma.produto.findUnique({
+      where: { id },
+    });
+
+    if (!produtoExistente) {
+      throw new NotFoundException(`Produto com o id informado é inexistente.`);
+    }
+
+    if (nome && nome !== produtoExistente.nome) {
+      const produtoComMesmoNome = await this.prisma.produto.findUnique({
+        where: { nome },
+      });
+
+      if (produtoComMesmoNome) {
+        throw new ConflictException(`Já existe um produto com esse nome.`);
+      }
+    }
+
+    if (precoCompra < 0) {
+      throw new BadRequestException('O preço de compra não pode ser negativo.');
+    }
+    if (precoVenda < 0) {
+      throw new BadRequestException('O preço de venda não pode ser negativo.');
+    }
+    if (quantidade < 0) {
+      throw new BadRequestException('A quantidade não pode ser negativa.');
+    }
+
+    try {
+      return await this.prisma.produto.update({
+        where: { id },
+        data: updateProdutoDto,
+      });
+    } catch (err) {
+      throw new InternalServerErrorException('Erro ao atualizar o produto.');
+    }
   }
 
   async desativar(id: number): Promise<Produto> {
