@@ -1,0 +1,12 @@
+### /produto (get): retorna uma lista de produtos ativos
+GET http://localhost:3000/produto
+
+### /produto (post): adiciona um novo produto e retorna o mesmo
+POST http://localhost:3000/produto
+Content-Type: application/json
+
+{
+    "nome": "Abacaxi",
+    "descricao": "Abacaxi excepcional jamais visto"
+}
+

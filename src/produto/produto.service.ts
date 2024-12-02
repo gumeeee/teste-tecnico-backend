@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,14 +17,35 @@ export class ProdutoService {
 
   async buscarTodos(): Promise<Produto[]> {
     //método que retorna todos os produtos com status ativo (true)
-    const produtos = await this.prisma.produto.findMany({ where: { status: true } });
-    if (!produtos) throw new InternalServerErrorException('Não foi possível buscar os produtos.');
+    const produtos = await this.prisma.produto.findMany({
+      where: { status: true },
+    });
+    if (!produtos)
+      throw new InternalServerErrorException(
+        'Não foi possível buscar os produtos.',
+      );
     return produtos;
   }
 
   async criar(createProdutoDto: CreateProdutoDto): Promise<Produto> {
     //desenvolver método que cria um novo produto, retornando o produto criado
-    throw new Error('Método não implementado.');
+
+    const { nome } = createProdutoDto;
+
+    const produtoExistente = await this.prisma.produto.findUnique({
+      where: { nome },
+    });
+    if (produtoExistente) {
+      throw new ConflictException(`Já existe um produto com o nome informado.`);
+    }
+
+    try {
+      return await this.prisma.produto.create({
+        data: createProdutoDto,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Erro ao criar o produto.');
+    }
   }
 
   async buscarPorId(id: number): Promise<Produto> {
@@ -27,7 +53,10 @@ export class ProdutoService {
     throw new Error('Método não implementado.');
   }
 
-  async atualizar(id: number, updateProdutoDto: UpdateProdutoDto): Promise<Produto> {
+  async atualizar(
+    id: number,
+    updateProdutoDto: UpdateProdutoDto,
+  ): Promise<Produto> {
     //desenvolver método para atualizar os dados do produto do id informado, retornando o produto atualizado
     throw new Error('Método não implementado.');
   }
@@ -37,7 +66,10 @@ export class ProdutoService {
     throw new Error('Método não implementado.');
   }
 
-  async comprarProdutos(id: number, compraProdutoDto: CompraProdutoDto): Promise<Operacao> {
+  async comprarProdutos(
+    id: number,
+    compraProdutoDto: CompraProdutoDto,
+  ): Promise<Operacao> {
     const tipo = 1;
     //desenvolver método que executa a operação de compra, retornando a operação com os respectivos dados do produto
     //tipo: 1 - compra, 2 - venda
@@ -48,7 +80,10 @@ export class ProdutoService {
     throw new Error('Método não implementado.');
   }
 
-  async venderProdutos(id: number, vendaProduto: VendaProdutoDto): Promise<Operacao> {
+  async venderProdutos(
+    id: number,
+    vendaProduto: VendaProdutoDto,
+  ): Promise<Operacao> {
     const tipo = 2;
     //desenvolver método que executa a operação de venda, retornando a venda com os respectivos dados do produto
     //tipo: 1 - compra, 2 - venda
