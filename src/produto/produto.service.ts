@@ -127,7 +127,7 @@ export class ProdutoService {
         where: { id },
         data: { status: false },
       });
-    } catch (error) {
+    } catch (err) {
       throw new InternalServerErrorException('Erro ao desativar o produto.');
     }
   }
@@ -145,6 +145,7 @@ export class ProdutoService {
 
     const { quantidade, preco } = compraProdutoDto;
     const tipo = 1;
+    const produto = await this.prisma.produto.findUnique({ where: { id } });
 
     if (preco <= 0) {
       throw new BadRequestException('O preço é preciso ser maior que zero.');
@@ -155,8 +156,6 @@ export class ProdutoService {
         'A quantidade é preciso ser maior que zero.',
       );
     }
-
-    const produto = await this.prisma.produto.findUnique({ where: { id } });
 
     if (!produto) {
       throw new NotFoundException(`Produto com id informado não encontrado.`);
@@ -170,8 +169,6 @@ export class ProdutoService {
 
     try {
       const produto = await this.prisma.produto.findUnique({ where: { id } });
-      if (!produto)
-        throw new NotFoundException('Produto com o id não encontrado.');
 
       const precoVenda = Math.max(produto.precoVenda || 0, preco * 1.5);
       const novoProduto = await this.prisma.produto.update({
@@ -192,7 +189,7 @@ export class ProdutoService {
           produtoId: novoProduto.id,
         },
       });
-    } catch (error) {
+    } catch (err) {
       throw new InternalServerErrorException(
         'Erro ao realizar a operação de compra.',
       );
@@ -210,18 +207,27 @@ export class ProdutoService {
     //caso a quantidade seja esgotada, ou seja, chegue a 0, você deverá atualizar os precoVenda e precoCompra para 0
     const { quantidade } = vendaProduto;
     const tipo = 2;
+    const produto = await this.prisma.produto.findUnique({ where: { id } });
 
     if (quantidade <= 0) {
       throw new BadRequestException('Quantidade e deve ser maior que zero.');
     }
 
+    if (!produto) {
+      throw new NotFoundException('Produto com o id informado não encontrado.');
+    }
+
+    if (!produto.status)
+      throw new BadRequestException(
+        'Não é possível vender um produto desativado',
+      );
+
+    if ((produto.quantidade || 0) < quantidade) {
+      throw new BadRequestException('Quantidade insuficiente em estoque.');
+    }
+
     try {
       const produto = await this.prisma.produto.findUnique({ where: { id } });
-      if (!produto) throw new NotFoundException('Produto não encontrado.');
-
-      if ((produto.quantidade || 0) < quantidade) {
-        throw new BadRequestException('Quantidade insuficiente em estoque.');
-      }
 
       const novaQuantidade = (produto.quantidade || 0) - quantidade;
 
@@ -245,7 +251,7 @@ export class ProdutoService {
           produtoId: novoProduto.id,
         },
       });
-    } catch (error) {
+    } catch (err) {
       throw new InternalServerErrorException(
         'Erro ao realizar a operação de venda.',
       );
