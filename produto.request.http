@@ -22,3 +22,6 @@ Content-Type: application/json
     "precoVenda": 12,
     "quantidade": 100
 }
+
+### /produto/:id (delete): desativa um produto, ou seja, atualiza o status do mesmo para false e retorna seus dados atualizados
+DELETE http://localhost:3000/produto/4
