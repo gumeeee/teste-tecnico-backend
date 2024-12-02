@@ -136,14 +136,67 @@ export class ProdutoService {
     id: number,
     compraProdutoDto: CompraProdutoDto,
   ): Promise<Operacao> {
-    const tipo = 1;
     //desenvolver método que executa a operação de compra, retornando a operação com os respectivos dados do produto
     //tipo: 1 - compra, 2 - venda
     //o preço de venda do produto deve ser calculado a partir do preço inserido na operacao, com uma margem de 50% de lucro
     //caso o novo preço seja maior que o preço de venda atual, o preço de venda deve ser atualizado, assim como o preço de compra
     //calcular o valor total gasto na compra (quantidade * preco)
     //deve também atualizar a quantidade do produto, somando a quantidade comprada
-    throw new Error('Método não implementado.');
+
+    const { quantidade, preco } = compraProdutoDto;
+    const tipo = 1;
+
+    if (preco <= 0) {
+      throw new BadRequestException('O preço é preciso ser maior que zero.');
+    }
+
+    if (quantidade <= 0) {
+      throw new BadRequestException(
+        'A quantidade é preciso ser maior que zero.',
+      );
+    }
+
+    const produto = await this.prisma.produto.findUnique({ where: { id } });
+
+    if (!produto) {
+      throw new NotFoundException(`Produto com id informado não encontrado.`);
+    }
+
+    if (!produto.status) {
+      throw new BadRequestException(
+        'Não é possível comprar um produto desativado.',
+      );
+    }
+
+    try {
+      const produto = await this.prisma.produto.findUnique({ where: { id } });
+      if (!produto)
+        throw new NotFoundException('Produto com o id não encontrado.');
+
+      const precoVenda = Math.max(produto.precoVenda || 0, preco * 1.5);
+      const novoProduto = await this.prisma.produto.update({
+        where: { id },
+        data: {
+          quantidade: (produto.quantidade || 0) + quantidade,
+          precoCompra: preco,
+          precoVenda,
+        },
+      });
+
+      return await this.prisma.operacao.create({
+        data: {
+          tipo,
+          quantidade,
+          preco,
+          total: quantidade * preco,
+          produtoId: novoProduto.id,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Erro ao realizar a operação de compra.',
+      );
+    }
   }
 
   async venderProdutos(
