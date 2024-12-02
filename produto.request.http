@@ -11,14 +11,14 @@ Content-Type: application/json
 }
 
 ### /produto/:id (get): retorna um produto buscando pelo id do mesmo, juntamente com os seus dados de operação, dentro do campo "operacoes"
-GET http://localhost:3000/produto/4
+GET http://localhost:3000/produto/3
 
 ### /produto/:id (patch): atualiza um produto buscando pelo id do mesmo, retornando os dados do produto atualizado
-PATCH http://localhost:3000/produto/4
+PATCH http://localhost:3000/produto/3
 Content-Type: application/json
 
 {
-    "precoCompra": 10.50,
+    "precoCompra": 12,
     "precoVenda": 12,
     "quantidade": 100,
     "status": true
@@ -28,7 +28,16 @@ Content-Type: application/json
 DELETE http://localhost:3000/produto/4
 
 ### /produto/:id/comprar (post): realiza uma operação de compra do produto, atualizando o preço e quantidade, retornando os dados da operação, com os dados do produto da operação realizada
-POST http://localhost:3000/produto/4/comprar
+POST http://localhost:3000/produto/3/comprar
+Content-Type: application/json
+
+{
+    "quantidade": 10,
+    "preco": 12
+}
+
+### /produto/:id/vender (post): realiza uma operação de venda do produto, atualizando a quantidade, retornando os dados da operação, com os dados do produto da operação realizada
+POST http://localhost:3000/produto/3/vender
 Content-Type: application/json
 
 {

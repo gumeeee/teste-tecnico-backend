@@ -203,12 +203,52 @@ export class ProdutoService {
     id: number,
     vendaProduto: VendaProdutoDto,
   ): Promise<Operacao> {
-    const tipo = 2;
     //desenvolver método que executa a operação de venda, retornando a venda com os respectivos dados do produto
     //tipo: 1 - compra, 2 - venda
     //calcular o valor total recebido na venda (quantidade * preco)
     //deve também atualizar a quantidade do produto, subtraindo a quantidade vendida
     //caso a quantidade seja esgotada, ou seja, chegue a 0, você deverá atualizar os precoVenda e precoCompra para 0
-    throw new Error('Método não implementado.');
+    const { quantidade } = vendaProduto;
+    const tipo = 2;
+
+    if (quantidade <= 0) {
+      throw new BadRequestException('Quantidade e deve ser maior que zero.');
+    }
+
+    try {
+      const produto = await this.prisma.produto.findUnique({ where: { id } });
+      if (!produto) throw new NotFoundException('Produto não encontrado.');
+
+      if ((produto.quantidade || 0) < quantidade) {
+        throw new BadRequestException('Quantidade insuficiente em estoque.');
+      }
+
+      const novaQuantidade = (produto.quantidade || 0) - quantidade;
+
+      const novoProduto = await this.prisma.produto.update({
+        where: { id },
+        data: {
+          quantidade: novaQuantidade,
+          precoCompra: novaQuantidade === 0 ? 0 : produto.precoCompra,
+          precoVenda: novaQuantidade === 0 ? 0 : produto.precoVenda,
+        },
+      });
+
+      const preco = novoProduto.precoVenda;
+
+      return await this.prisma.operacao.create({
+        data: {
+          tipo,
+          quantidade,
+          preco,
+          total: quantidade * preco,
+          produtoId: novoProduto.id,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Erro ao realizar a operação de venda.',
+      );
+    }
   }
 }
