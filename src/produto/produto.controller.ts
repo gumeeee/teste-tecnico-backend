@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ProdutoService } from './produto.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
@@ -26,7 +34,10 @@ export class ProdutoController {
   }
 
   @Patch(':id')
-  atualizar(@Param('id') id: string, @Body() updateProdutoDto: UpdateProdutoDto): Promise<Produto> {
+  atualizar(
+    @Param('id') id: string,
+    @Body() updateProdutoDto: UpdateProdutoDto,
+  ): Promise<Produto> {
     return this.produtoService.atualizar(+id, updateProdutoDto);
   }
 
@@ -36,12 +47,18 @@ export class ProdutoController {
   }
 
   @Post(':id/comprar')
-  comprarProdutos(@Body() compraProdutoDto: CompraProdutoDto, @Param('id') id: string): Promise<Operacao> {
+  comprarProdutos(
+    @Body() compraProdutoDto: CompraProdutoDto,
+    @Param('id') id: string,
+  ): Promise<Operacao> {
     return this.produtoService.comprarProdutos(+id, compraProdutoDto);
   }
 
   @Post(':id/vender')
-  venderProdutos(@Body() vendaProdutoDto: VendaProdutoDto, @Param('id') id: string): Promise<Operacao> {
+  venderProdutos(
+    @Body() vendaProdutoDto: VendaProdutoDto,
+    @Param('id') id: string,
+  ): Promise<Operacao> {
     return this.produtoService.venderProdutos(+id, vendaProdutoDto);
   }
 }
